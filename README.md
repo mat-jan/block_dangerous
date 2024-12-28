@@ -1,5 +1,6 @@
 ### Instrukcja użytkowania skryptu PowerShell do aktualizacji pliku `hosts` z listą złośliwych domen CERT Polska
 English version below.
+
 conatct me : github.matjan@gmail.com
 
 Skrypt umożliwia pobranie listy złośliwych domen z **CERT Polska**, wykonanie kopii zapasowej pliku `hosts`, a następnie zaktualizowanie tego pliku na komputerze. Wszystko odbywa się automatycznie, a ewentualne błędy są logowane do osobnego pliku.
