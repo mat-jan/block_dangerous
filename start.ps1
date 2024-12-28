@@ -1,65 +1,52 @@
-# Konfiguracja
-$domenaDoCERT = "https://cert.pl" # Docelowa domena CERT Polska
-$plikWejsciowy = "domains_to_check.txt" # Lista domen do sprawdzenia
-$plikNiebezpieczne = "dangerous_domains.txt" # Lista niebezpiecznych domen
-$plikWyjsciowy = "redirect_list.txt" # Plik wynikowy
-$plikBackup = "redirect_list_backup.txt" # Plik kopii zapasowej
+# Ścieżki do plików
+$hostsFile = "$env:SystemRoot\System32\drivers\etc\hosts" # Systemowy plik hosts
+$backupFolder = Join-Path $env:SystemRoot "System32\drivers\etc\backup" # Folder kopii zapasowych
+$tempCertFile = Join-Path $env:TEMP "cert_domains_hosts.txt" # Tymczasowy plik z listą CERT
+$certUrl = "https://hole.cert.pl/domains/v2/domains_hosts.txt" # URL listy CERT
 
-# Wczytaj dane
-if (!(Test-Path $plikWejsciowy)) {
-    Write-Host "Plik z listą domen ($plikWejsciowy) nie istnieje!" -ForegroundColor Red
-    exit
-}
-
-if (!(Test-Path $plikNiebezpieczne)) {
-    Write-Host "Plik z listą niebezpiecznych domen ($plikNiebezpieczne) nie istnieje!" -ForegroundColor Red
-    exit
-}
-
-$domenyDoSprawdzenia = Get-Content $plikWejsciowy
-$niebezpieczneDomeny = Get-Content $plikNiebezpieczne
-
-# Utworzenie kopii zapasowej pliku wynikowego
-if (Test-Path $plikWyjsciowy) {
-    Copy-Item $plikWyjsciowy $plikBackup -Force
-    Write-Host "Kopia zapasowa została utworzona: $plikBackup" -ForegroundColor Green
-}
-
-# Tworzenie listy przekierowań
-$przekierowania = @()
-foreach ($domena in $domenyDoSprawdzenia) {
-    if ($niebezpieczneDomeny -contains $domena) {
-        $przekierowania += "$domena -> $domenaDoCERT"
+# Funkcja wykonująca kopię zapasową pliku hosts
+function Backup-Hosts {
+    if (!(Test-Path $backupFolder)) {
+        New-Item -ItemType Directory -Path $backupFolder | Out-Null
+        Write-Host "Utworzono folder kopii zapasowych: $backupFolder" -ForegroundColor Green
     }
+
+    $backupFile = Join-Path $backupFolder ("hosts_backup_" + (Get-Date -Format "yyyyMMddHHmmss") + ".txt")
+    Copy-Item -Path $hostsFile -Destination $backupFile -Force
+    Write-Host "Wykonano kopię zapasową pliku hosts: $backupFile" -ForegroundColor Cyan
 }
 
-# Synchronizacja: dodaj nowe i usuń nieaktualne linie
-if (Test-Path $plikWyjsciowy) {
-    $aktualnePrzekierowania = Get-Content $plikWyjsciowy
-    $przekierowania = $przekierowania | Sort-Object | Get-Unique
-    $aktualnePrzekierowania = $aktualnePrzekierowania | Sort-Object | Get-Unique
-    $nowePrzekierowania = $przekierowania | Where-Object { $_ -notin $aktualnePrzekierowania }
-    $usunietePrzekierowania = $aktualnePrzekierowania | Where-Object { $_ -notin $przekierowania }
-    
-    # Zapisanie zaktualizowanej listy
-    $przekierowania | Out-File $plikWyjsciowy -Encoding UTF8
-    Write-Host "Plik zaktualizowany. Dodano: $($nowePrzekierowania.Count), Usunięto: $($usunietePrzekierowania.Count)" -ForegroundColor Cyan
-} else {
-    # Pierwsze utworzenie pliku wynikowego
-    $przekierowania | Out-File $plikWyjsciowy -Encoding UTF8
-    Write-Host "Plik wynikowy został utworzony: $plikWyjsciowy" -ForegroundColor Green
+# Funkcja pobierająca i aktualizująca plik hosts
+function Update-CertHosts {
+    # Pobranie nowej listy
+    try {
+        Invoke-WebRequest -Uri $certUrl -OutFile $tempCertFile -ErrorAction Stop
+        Write-Host "Pobrano listę CERT Polska." -ForegroundColor Green
+    } catch {
+        Write-Host "Nie udało się pobrać listy CERT Polska: $_" -ForegroundColor Red
+        exit
+    }
+
+    # Wczytanie zawartości systemowego pliku hosts
+    $hostsContent = Get-Content -Path $hostsFile -ErrorAction Stop
+
+    # Usunięcie starych wpisów CERT z pliku hosts
+    $startMarker = "# START CERT.PL HOSTS LIST"
+    $endMarker = "# END CERT.PL HOSTS LIST"
+    $cleanedHosts = $hostsContent | Where-Object { 
+        ($_ -notlike "$startMarker*") -and ($_ -notlike "$endMarker*")
+    }
+
+    # Pobranie nowych wpisów z listy CERT
+    $newCertHosts = Get-Content -Path $tempCertFile | Where-Object { $_ -notlike "#*" -and $_ -notlike "" }
+    $newCertBlock = @("$startMarker") + $newCertHosts + @("$endMarker")
+
+    # Zapisanie zaktualizowanego pliku hosts
+    $updatedHosts = $cleanedHosts + $newCertBlock
+    Set-Content -Path $hostsFile -Value $updatedHosts -Force -Encoding UTF8
+    Write-Host "Zaktualizowano plik hosts z listą CERT Polska." -ForegroundColor Green
 }
 
-# Harmonogram aktualizacji codziennie o 12:00
-$taskName = "UpdateRedirectList"
-$scriptPath = (Get-Item -Path $MyInvocation.MyCommand.Definition).FullName
-
-if (!(Get-ScheduledTask | Where-Object {$_.TaskName -eq $taskName})) {
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"$scriptPath`""
-    $trigger = New-ScheduledTaskTrigger -Daily -At "12:00PM"
-    $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount
-    Register-ScheduledTask -Action $action -Trigger $trigger -Principal $principal -TaskName $taskName -Description "Codzienna aktualizacja listy przekierowań"
-    Write-Host "Zadanie harmonogramu zostało utworzone: $taskName" -ForegroundColor Green
-} else {
-    Write-Host "Zadanie harmonogramu już istnieje." -ForegroundColor Yellow
-}
+# Wykonanie funkcji
+Backup-Hosts
+Update-CertHosts
