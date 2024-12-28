@@ -1,5 +1,5 @@
 ### Instrukcja użytkowania skryptu PowerShell do aktualizacji pliku `hosts` z listą złośliwych domen CERT Polska
-
+English version below.
 conatct me : github.matjan@gmail.com
 
 Skrypt umożliwia pobranie listy złośliwych domen z **CERT Polska**, wykonanie kopii zapasowej pliku `hosts`, a następnie zaktualizowanie tego pliku na komputerze. Wszystko odbywa się automatycznie, a ewentualne błędy są logowane do osobnego pliku.
@@ -74,3 +74,52 @@ W przypadku tego skryptu, **złośliwe domeny** CERT Polska będą kierowane na 
 ### Podsumowanie
 
 Ten skrypt jest narzędziem umożliwiającym automatyczne blokowanie złośliwych domen na Twoim komputerze przez aktualizację pliku `hosts`. Regularne uruchamianie tego skryptu pomoże w utrzymaniu systemu w bezpiecznym stanie, chroniąc przed dostępem do stron internetowych zawierających złośliwe treści.
+
+
+### English version
+Here is the English version of the instructions for using the PowerShell script:
+
+---
+
+### Script Instructions
+
+This PowerShell script is designed to download a list of malicious domains from CERT Polska, create a backup of the `hosts` file, and update the `hosts` file with the downloaded domains. The script does not check if it is running as an administrator, so it needs to be manually run with administrator privileges.
+
+### Steps to Use the Script:
+
+1. **Download the script**:
+   - Copy the code provided above and save it to a file with the `.ps1` extension, e.g., `update_hosts.ps1`.
+
+2. **Run the script as Administrator**:
+   - The script requires administrator privileges because it modifies the `hosts` file in the system folder. To run it as an administrator:
+     1. Right-click the script file (`update_hosts.ps1`).
+     2. Select **"Run as administrator"**.
+
+3. **What happens after running the script**:
+   - The script creates a backup of the `hosts` file in the folder `C:\Windows\System32\drivers\etc\backup`.
+   - It downloads the list of malicious domains from CERT Polska and stores it in a temporary file.
+   - The script then updates the `hosts` file by adding the malicious domains between the lines marked `# START CERT.PL HOSTS LIST` and `# END CERT.PL HOSTS LIST`.
+   - If any errors occur during the process, they will be logged to the `error.log` file located in the **Downloads** folder.
+
+4. **Backup of the `hosts` file**:
+   - A backup of the `hosts` file is stored in the folder `C:\Windows\System32\drivers\etc\backup\hosts_backup.txt`.
+
+5. **Error Logging**:
+   - If any errors occur, the details will be logged to a file called `error.log` in the **Downloads** folder.
+
+---
+
+### Notes:
+
+- This script works only on Windows, as it modifies the `hosts` file in the system directory.
+- Running the script regularly will help maintain your system’s security by blocking access to malicious websites.
+
+---
+
+### Example of how to execute the script:
+
+To run the script:
+1. Save the file `update_hosts.ps1` to your preferred location.
+2. Right-click the file and choose **"Run as administrator"** to ensure the script has the necessary permissions to modify the `hosts` file.
+
+By following these steps, your system will remain protected against known malicious domains, and you'll always have a backup in case you need to restore the previous `hosts` configuration.
