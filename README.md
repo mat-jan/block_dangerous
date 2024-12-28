@@ -1,76 +1,76 @@
-# Skrypt PowerShell do aktualizacji pliku `hosts` z listą CERT Polska
-contact : github.matjan@gmail.com
+### Instrukcja użytkowania skryptu PowerShell do aktualizacji pliku `hosts` z listą złośliwych domen CERT Polska
 
-## Opis
+conatct me : github.matjan@gmail.com
 
-Ten skrypt PowerShell umożliwia automatyczne pobranie najnowszej listy złośliwych domen z **CERT Polska**, wykonanie kopii zapasowej aktualnego pliku `hosts` i aktualizację pliku `hosts` w systemie Windows, aby blokować złośliwe domeny. Skrypt obsługuje również logowanie błędów oraz uruchamianie w trybie administratora, jeśli nie został uruchomiony z odpowiednimi uprawnieniami.
-
-## Funkcjonalności
-
-1. **Pobieranie listy złośliwych domen**: Skrypt pobiera listę złośliwych domen z publicznego źródła CERT Polska.
-2. **Aktualizacja pliku `hosts`**: Zawartość pliku `hosts` jest aktualizowana o nowe domeny, a stare wpisy związane z CERT Polska są usuwane.
-3. **Kopia zapasowa**: Przed aktualizacją pliku `hosts`, skrypt wykonuje kopię zapasową pliku w folderze `backup`.
-4. **Logowanie błędów**: Jeśli wystąpią jakiekolwiek błędy podczas wykonywania skryptu, są one zapisywane w pliku logów `error.log` w folderze **Pobrane** użytkownika.
-5. **Automatyczne podniesienie uprawnień**: Skrypt automatycznie uruchomi się ponownie w trybie administratora, jeśli nie zostanie uruchomiony z odpowiednimi uprawnieniami.
-
-## Instrukcja
-
-### Wymagania
-
-- Windows PowerShell (zalecana wersja 5.0 lub wyższa).
-- Uprawnienia administratora na komputerze.
-
-### Jak uruchomić skrypt
-
-1. **Pobierz skrypt**:
-   - Sklonuj repozytorium na swoje urządzenie lub pobierz plik skryptu bezpośrednio.
-   
-   ```bash
-   git clone https://github.com/TwojeRepozytorium/skrypt.git
-   ```
-
-2. **Uruchom skrypt**:
-   - Kliknij prawym przyciskiem myszy na plik skryptu PowerShell i wybierz **"Uruchom jako administrator"**, jeśli PowerShell już działa z uprawnieniami administratora, skrypt wykona się automatycznie.
-   
-   - Jeśli skrypt nie jest uruchomiony jako administrator, automatycznie poprosi o podniesienie uprawnień (wyświetli się okno UAC).
-
-3. **Skrypt wykonuje następujące kroki**:
-   - Sprawdza, czy działa w trybie administratora.
-   - Jeśli nie, automatycznie uruchamia się ponownie z uprawnieniami administratora.
-   - Tworzy kopię zapasową pliku `hosts`.
-   - Pobiera nową listę złośliwych domen z **CERT Polska**.
-   - Usuwa stare wpisy z listy CERT Polska z pliku `hosts`.
-   - Dodaje nowe wpisy z listy CERT Polska do pliku `hosts`.
-   - Loguje wszelkie błędy do pliku `error.log` w folderze Pobrane.
-
-4. **Kopia zapasowa**:
-   - Kopia zapasowa pliku `hosts` jest tworzona w folderze `System32\drivers\etc\backup`, a nazwa kopii zawiera datę i godzinę.
-
-5. **Logowanie błędów**:
-   - Jeśli podczas wykonywania skryptu wystąpią błędy, szczegóły błędów zostaną zapisane w pliku `error.log`, który znajduje się w folderze **Pobrane**.
-
-### Harmonogramowanie zadania
-
-Aby skrypt uruchamiał się codziennie o określonej godzinie (np. o 12:00), możesz skonfigurować **Harmonogram zadań** w systemie Windows, aby automatycznie uruchamiał się codziennie.
-
-1. Otwórz **Harmonogram zadań** i kliknij **Utwórz zadanie**.
-2. W zakładce **Ogólne** wpisz nazwę zadania.
-3. W zakładce **Wyzwalacze** dodaj nowy wyzwalacz ustawiając godzinę na 12:00.
-4. W zakładce **Akcje** dodaj nową akcję uruchamiającą PowerShell z parametrami:
-   - **Program/script**: `powershell.exe`
-   - **Dodaj argumenty**: `-NoProfile -ExecutionPolicy Bypass -File "C:\ścieżka\do\skryptu.ps1"`
-5. Kliknij **OK** i wprowadź swoje uprawnienia administratora, aby zapisać zadanie.
-
-## Licencja
-
-Skrypt jest dostępny na licencji MIT.
-
-## Problemy
-
-Jeśli napotkałeś jakiekolwiek problemy, proszę zgłoś je w zakładce **Issues** na GitHubie. Jeśli masz propozycje ulepszeń lub dodatkowych funkcji, również możesz je dodać, otwierając **Pull Request**.
+Skrypt umożliwia pobranie listy złośliwych domen z **CERT Polska**, wykonanie kopii zapasowej pliku `hosts`, a następnie zaktualizowanie tego pliku na komputerze. Wszystko odbywa się automatycznie, a ewentualne błędy są logowane do osobnego pliku.
 
 ---
 
-### Dodatkowe wskazówki:
+### Jak działa skrypt?
 
-- Jeśli chcesz, aby skrypt działał bez przerwy, uruchamiaj go regularnie za pomocą **Harmonogramu zadań** lub innego narzędzia do planowania zadań w systemie Windows.
+1. **Backup pliku `hosts`**:
+   - Przed dokonaniem jakiejkolwiek zmiany w pliku `hosts`, skrypt wykonuje kopię zapasową tego pliku.
+   - Kopia zapasowa jest zapisywana w folderze `C:\Windows\System32\drivers\etc\backup` jako `hosts_backup.txt`.
+   - Tylko **aktualna wersja** pliku `hosts` zostaje zapisana w kopii zapasowej. Stare wpisy są usuwane, a nowe domeny dodawane.
+   
+2. **Pobieranie listy złośliwych domen**:
+   - Skrypt pobiera aktualną listę złośliwych domen udostępnioną przez **CERT Polska** pod adresem: `https://hole.cert.pl/domains/v2/domains_hosts.txt`.
+   - Zawartość listy jest zapisywana w pliku tymczasowym w folderze `%TEMP%`, który jest później wykorzystywany do zaktualizowania pliku `hosts`.
+
+3. **Aktualizacja pliku `hosts`**:
+   - Po pobraniu listy złośliwych domen skrypt aktualizuje plik `hosts` na komputerze. 
+   - Wpisy z listy CERT Polska są dodawane do pliku `hosts` w odpowiednim formacie, który blokuje dostęp do tych domen.
+   - Plik `hosts` zostaje zaktualizowany między znacznikami `# START CERT.PL HOSTS LIST` oraz `# END CERT.PL HOSTS LIST`.
+
+4. **Logowanie błędów**:
+   - Jeśli wystąpi jakikolwiek błąd (np. błąd pobierania pliku lub problem z dostępem do pliku `hosts`), skrypt zapisuje szczegóły błędu do pliku logu `error.log`, który znajduje się w folderze **Pobrane** (`Downloads`).
+
+---
+
+### Instrukcja krok po kroku
+
+#### 1. Pobierz i zapisz skrypt
+- Skopiuj kod skryptu do pliku z rozszerzeniem `.ps1` (np. `update_hosts.ps1`).
+
+#### 2. Uruchom skrypt jako administrator
+- Skrypt wymaga uprawnień administratora, ponieważ będzie modyfikował plik `hosts` w systemowym folderze `C:\Windows\System32\drivers\etc`.
+- Aby uruchomić skrypt jako administrator:
+  1. Kliknij prawym przyciskiem myszy na plik skryptu.
+  2. Wybierz opcję **"Uruchom jako administrator"**.
+
+#### 3. Co się wydarzy po uruchomieniu skryptu?
+- Skrypt wykona następujące kroki:
+  1. **Backup pliku hosts**: Sprawdzi, czy folder `backup` istnieje. Jeśli nie, utworzy go. Następnie wykona kopię zapasową pliku `hosts` w tym folderze, usuwając stare wpisy z listy CERT Polska i dodając nowe.
+  2. **Pobranie listy złośliwych domen**: Skrypt pobierze najnowszą listę złośliwych domen z CERT Polska.
+  3. **Aktualizacja pliku hosts**: Skrypt zaktualizuje plik `hosts`, dodając do niego nowe domeny z pobranej listy, które będą blokowane przez system.
+  4. **Logowanie błędów**: W przypadku wystąpienia jakiegokolwiek błędu, szczegóły błędu zostaną zapisane do pliku `error.log` w folderze **Pobrane**.
+
+#### 4. Co się stanie po zakończeniu działania skryptu?
+- Plik `hosts` zostanie zaktualizowany, a kopia zapasowa zostanie zapisana w folderze `C:\Windows\System32\drivers\etc\backup\hosts_backup.txt`.
+- Jeśli skrypt napotka jakiekolwiek błędy, zostaną one zapisane do pliku `error.log` w folderze **Pobrane**.
+
+#### 5. Jak sprawdzić kopię zapasową?
+- Kopia zapasowa pliku `hosts` będzie zapisana w folderze `C:\Windows\System32\drivers\etc\backup\hosts_backup.txt`. 
+- Będzie ona zawierała tylko aktualne domeny z listy CERT Polska.
+
+---
+
+### Jak działa plik `hosts`?
+
+Plik `hosts` to specjalny plik w systemie operacyjnym, który mapuje nazwy domenowe (np. `zlosliwa-domena.com`) na adresy IP (np. `127.0.0.1`). System operacyjny używa tego pliku do rozwiązywania nazw domenowych. Jeśli wpis w pliku `hosts` jest skierowany na adres IP `127.0.0.1`, to próba wejścia na tę domenę w przeglądarce zostanie zablokowana (ponieważ adres `127.0.0.1` wskazuje na lokalny komputer, co nie prowadzi do żadnej strony internetowej).
+
+W przypadku tego skryptu, **złośliwe domeny** CERT Polska będą kierowane na adres IP serwera lokalnego, co uniemożliwi dostęp do tych stron.
+
+---
+
+### Jakie są wymagania?
+
+1. **System operacyjny**: Skrypt działa na systemach Windows, ponieważ manipuluje plikiem `hosts` znajdującym się w systemowym folderze.
+2. **Uprawnienia administratora**: Skrypt wymaga uprawnień administratora, ponieważ modyfikuje plik systemowy `hosts`.
+3. **Połączenie internetowe**: Skrypt wymaga dostępu do internetu w celu pobrania listy złośliwych domen z CERT Polska.
+
+---
+
+### Podsumowanie
+
+Ten skrypt jest narzędziem umożliwiającym automatyczne blokowanie złośliwych domen na Twoim komputerze przez aktualizację pliku `hosts`. Regularne uruchamianie tego skryptu pomoże w utrzymaniu systemu w bezpiecznym stanie, chroniąc przed dostępem do stron internetowych zawierających złośliwe treści.
