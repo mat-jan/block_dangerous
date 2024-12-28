@@ -1,3 +1,16 @@
+# Funkcja sprawdzająca, czy PowerShell działa jako administrator
+function Test-Administrator {
+    $currentUser = New-Object Security.Principal.WindowsPrincipal [Security.Principal.WindowsIdentity]::GetCurrent()
+    return $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+# Uruchomienie skryptu w trybie administratora, jeśli nie ma uprawnień
+if (-not (Test-Administrator)) {
+    Write-Host "Uruchamianie skryptu w trybie administratora..."
+    Start-Process -FilePath "powershell" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    exit
+}
+
 # Ścieżki do plików
 $hostsFile = "$env:SystemRoot\System32\drivers\etc\hosts" # Systemowy plik hosts
 $backupFolder = Join-Path $env:SystemRoot "System32\drivers\etc\backup" # Folder kopii zapasowych
