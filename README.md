@@ -1,4 +1,5 @@
 # Skrypt PowerShell do aktualizacji pliku `hosts` z listą CERT Polska
+contact : github.matjan@gmail.com
 
 ## Opis
 
