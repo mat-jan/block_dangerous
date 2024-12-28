@@ -1,7 +1,3 @@
-Oto przykładowy opis, który możesz dodać do swojego repozytorium GitHub, zawierający instrukcje dla użytkowników:
-
----
-
 # Skrypt PowerShell do aktualizacji pliku `hosts` z listą CERT Polska
 
 ## Opis
